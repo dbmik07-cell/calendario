@@ -6,12 +6,12 @@
 
 **Status:** ready-for-agent
 
-- [ ] Il Nucleo espone `aggiungiDaTesto(frase)` che restituisce l'Impegno creato oppure un errore leggibile
-- [ ] Riconosce "oggi", "domani", "dopodomani"
-- [ ] Riconosce l'orario "alle HH", "alle HH:MM", "HH:MM", "HH.MM"
-- [ ] Senza giorno: oggi, oppure domani se l'orario di oggi è già passato
-- [ ] Il titolo è il testo che resta, senza preposizioni ai bordi e con la prima lettera maiuscola; titolo vuoto → errore
-- [ ] Ogni Impegno ha un `id`, `anticipoMinuti` 15 e `promemoriaInviato` false; il salvataggio su file è atomico
-- [ ] La lista del giorno mostra orario e titolo in ordine di orario e si aggiorna subito dopo l'aggiunta
-- [ ] Il Widget mostra la conferma o l'errore
-- [ ] Test Vitest via Nucleo per ogni forma sopra con un "adesso" fisso, compreso il caso dell'orario già passato e le Frasi non valide che non salvano nulla
+- [x] Il Nucleo espone `aggiungiDaTesto(frase)` che restituisce l'Impegno creato oppure un errore leggibile
+- [x] Riconosce "oggi", "domani", "dopodomani"
+- [x] Riconosce l'orario "alle HH", "alle HH:MM", "HH:MM", "HH.MM"
+- [x] Senza giorno: oggi, oppure domani se l'orario di oggi è già passato
+- [x] Il titolo è il testo che resta, senza preposizioni ai bordi e con la prima lettera maiuscola; titolo vuoto → errore
+- [x] Ogni Impegno ha un `id`, `anticipoMinuti` 15 e `promemoriaInviato` false; il salvataggio su file è atomico
+- [ ] La lista del giorno mostra orario e titolo in ordine di orario e si aggiorna subito dopo l'aggiunta (per ora solo per oggi; per gli altri giorni arriva col ticket 07)
+- [x] Il Widget mostra la conferma o l'errore
+- [x] Test Vitest via Nucleo per ogni forma sopra con un "adesso" fisso, compreso il caso dell'orario già passato e le Frasi non valide che non salvano nulla

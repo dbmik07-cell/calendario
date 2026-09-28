@@ -25,3 +25,14 @@ export const giornoDi = (inizio) => inizio.slice(0, 10);
 
 /** @param {string} inizio "YYYY-MM-DDTHH:MM" @returns {string} "HH:MM" */
 export const orarioDi = (inizio) => inizio.slice(11, 16);
+
+/**
+ * @param {string} inizio "YYYY-MM-DDTHH:MM"
+ * @param {number} minuti
+ * @returns {string} "YYYY-MM-DDTHH:MM"
+ */
+export function aggiungiMinuti(inizio, minuti) {
+  const d = leggiData(inizio);
+  d.setMinutes(d.getMinutes() + minuti);
+  return formattaInizio(d);
+}

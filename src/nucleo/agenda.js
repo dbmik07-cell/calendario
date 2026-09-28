@@ -38,6 +38,7 @@ export function creaAgenda({ orologio, archivio }) {
         id: crypto.randomUUID(),
         titolo: interpretata.titolo,
         inizio: interpretata.inizio,
+        ...(interpretata.durataMinuti === undefined ? {} : { durataMinuti: interpretata.durataMinuti }),
         anticipoMinuti: ANTICIPO_PREDEFINITO_MINUTI,
         promemoriaInviato: false,
       };

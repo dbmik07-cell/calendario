@@ -103,7 +103,8 @@ body {
 
 .orario {
   display: inline-block;
-  width: 48px;
+  min-width: 48px;
+  margin-right: 8px;
   color: #86868b;
   font-variant-numeric: tabular-nums;
 }

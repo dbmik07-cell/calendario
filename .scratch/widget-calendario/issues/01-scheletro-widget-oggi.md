@@ -6,11 +6,11 @@
 
 **Status:** ready-for-agent
 
-- [ ] Il repo è inizializzato come progetto Node con Electron e Vitest; un comando avvia l'app e uno esegue i test
-- [ ] Il Nucleo dell'Agenda espone `giorno(data)` e riceve dall'esterno orologio e archivio; nessuna dipendenza da Electron o DOM
-- [ ] L'Archivio su file legge l'Agenda dal file JSON (formato `versione`, `impegni`, `coseDaFare` della spec); se il file non esiste parte da un'Agenda vuota
-- [ ] Il Widget mostra il mini-calendario del mese corrente con oggi evidenziato
-- [ ] Il Widget mostra "giornata vuota" (o simile) quando oggi non ha nulla
-- [ ] Un Impegno scritto a mano nel file per oggi compare nella lista all'avvio
-- [ ] Il renderer usa `contextIsolation` e parla col Nucleo solo tramite preload/IPC
-- [ ] Test Vitest sul Nucleo con orologio finto e archivio in memoria: `giorno` restituisce gli elementi del giorno richiesto e non quelli di altri giorni
+- [x] Il repo è inizializzato come progetto Node con Electron e Vitest; un comando avvia l'app e uno esegue i test
+- [x] Il Nucleo dell'Agenda espone `giorno(data)` e riceve dall'esterno orologio e archivio; nessuna dipendenza da Electron o DOM
+- [x] L'Archivio su file legge l'Agenda dal file JSON (formato `versione`, `impegni`, `coseDaFare` della spec); se il file non esiste parte da un'Agenda vuota
+- [x] Il Widget mostra il mini-calendario del mese corrente con oggi evidenziato
+- [x] Il Widget mostra "giornata vuota" (o simile) quando oggi non ha nulla
+- [x] Un Impegno scritto a mano nel file per oggi compare nella lista all'avvio
+- [x] Il renderer usa `contextIsolation` e parla col Nucleo solo tramite preload/IPC
+- [x] Test Vitest sul Nucleo con orologio finto e archivio in memoria: `giorno` restituisce gli elementi del giorno richiesto e non quelli di altri giorni

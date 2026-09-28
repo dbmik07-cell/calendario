@@ -1,3 +1,5 @@
+import { aggiungiMinuti, giornoDi, leggiData, orarioDi } from "../nucleo/data-locale.js";
+
 /** @import { Impegno } from "../nucleo/tipi.js" */
 
 const oggi = await window.agenda.oggi();
@@ -17,8 +19,8 @@ elemento("nuova-frase").addEventListener("submit", async (evento) => {
     esito.textContent = risultato.errore;
     return;
   }
-  const { titolo, inizio } = risultato.impegno;
-  esito.textContent = `Aggiunto: ${titolo}, ${descriviData(inizio.slice(0, 10))} alle ${inizio.slice(11, 16)}`;
+  const { impegno } = risultato;
+  esito.textContent = `Aggiunto: ${impegno.titolo}, ${descriviData(giornoDi(impegno.inizio))}, ${descriviOrario(impegno)}`;
   campo.value = "";
   await aggiornaGiornata();
 });
@@ -29,8 +31,13 @@ async function aggiornaGiornata() {
 
 /** @param {string} data "YYYY-MM-DD" */
 function descriviData(data) {
-  const [a, m, g] = data.split("-").map(Number);
-  return new Date(a, m - 1, g).toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
+  return leggiData(data).toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
+}
+
+/** @param {Impegno} impegno @returns {string} "15:00" oppure "15:00–16:00" */
+function descriviOrario({ inizio, durataMinuti }) {
+  const orario = orarioDi(inizio);
+  return durataMinuti ? `${orario}–${orarioDi(aggiungiMinuti(inizio, durataMinuti))}` : orario;
 }
 
 /**
@@ -75,7 +82,7 @@ function mostraGiornata(data, impegni) {
       const voce = document.createElement("li");
       const orario = document.createElement("span");
       orario.className = "orario";
-      orario.textContent = impegno.inizio.slice(11, 16);
+      orario.textContent = descriviOrario(impegno);
       voce.append(orario, impegno.titolo);
       return voce;
     }),
