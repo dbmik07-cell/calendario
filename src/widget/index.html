@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'" />
+    <title>Calendario</title>
+    <link rel="stylesheet" href="widget.css" />
+    <script type="module" src="widget.js"></script>
+  </head>
+  <body>
+    <main class="widget">
+      <header class="maniglia" id="titolo-mese"></header>
+      <table class="mini-calendario">
+        <thead>
+          <tr><th>L</th><th>M</th><th>M</th><th>G</th><th>V</th><th>S</th><th>D</th></tr>
+        </thead>
+        <tbody id="giorni-mese"></tbody>
+      </table>
+      <section class="giornata">
+        <h2 id="titolo-giorno"></h2>
+        <ul id="impegni"></ul>
+        <p id="giornata-vuota" class="vuota" hidden>Niente in programma per oggi</p>
+      </section>
+    </main>
+  </body>
+</html>

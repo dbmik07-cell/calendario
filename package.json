@@ -1,0 +1,19 @@
+{
+  "name": "calendario",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Widget calendario da desktop con Promemoria",
+  "type": "module",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "vitest run",
+    "typecheck": "tsc -p ."
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "electron": "^44.4.5",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.2"
+  }
+}

@@ -1,0 +1,86 @@
+:root {
+  font-family: -apple-system, "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  color: #1d1d1f;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: transparent;
+}
+
+.widget {
+  box-sizing: border-box;
+  height: 100%;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(246, 246, 248, 0.88);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+/* Area da cui si trascina il Widget (la finestra non ha bordi). */
+.maniglia {
+  -webkit-app-region: drag;
+  font-weight: 600;
+  font-size: 15px;
+  text-transform: capitalize;
+  padding-bottom: 8px;
+  cursor: grab;
+}
+
+.mini-calendario {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  font-size: 12px;
+}
+
+.mini-calendario th {
+  color: #86868b;
+  font-weight: 500;
+  padding-bottom: 4px;
+}
+
+.mini-calendario td {
+  height: 26px;
+}
+
+.mini-calendario td.oggi {
+  background: #ff3b30;
+  color: white;
+  font-weight: 600;
+  border-radius: 50%;
+}
+
+.giornata h2 {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: capitalize;
+  margin: 14px 0 6px;
+}
+
+.giornata ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+}
+
+.giornata li {
+  padding: 6px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.orario {
+  display: inline-block;
+  width: 48px;
+  color: #86868b;
+  font-variant-numeric: tabular-nums;
+}
+
+.vuota {
+  color: #86868b;
+  font-size: 13px;
+}
