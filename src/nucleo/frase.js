@@ -39,8 +39,12 @@ const ORE_E_MINUTI = /^(\d{1,2})(?:[:.](\d{2}))?$/;
 
 // "dalle 15 alle 17": orario e durata insieme.
 const INTERVALLO = new RegExp(`${INIZIO}dalle\\s+(\\d\\S*)${CON_FRAZIONE}\\s+alle\\s+(\\d\\S*)${CON_FRAZIONE}`, "iu");
-// "per un'ora", "per mezz'ora", "per 2 ore", "per 30 minuti".
-const DURATA = espressione("per\\s+(?:(un['’\\s]?ora)|(mezz['’\\s]?ora)|(\\d+)\\s+or[ae]|(\\d+)\\s+minut[oi])");
+// Quanto tempo: "un'ora", "mezz'ora", "2 ore", "30 minuti" (quattro gruppi, vedi minutiIndicati).
+const QUANTO_TEMPO = "(?:(un['’\\s]?ora)|(mezz['’\\s]?ora)|(\\d+)\\s+or[ae]|(\\d+)\\s+minut[oi])";
+// Durata: "per un'ora", "per 30 minuti".
+const DURATA = espressione(`per\\s+${QUANTO_TEMPO}`);
+// Anticipo del Promemoria: "avvisami un'ora prima", "avvisami 30 minuti prima", "senza promemoria".
+const ANTICIPO = espressione(`avvisami\\s+${QUANTO_TEMPO}\\s+prima|(senza\\s+promemoria)`);
 
 // Parole che restano ai bordi del titolo dopo aver tolto giorno e orario
 // ("dal dentista", "alle 14 di domani").
@@ -57,7 +61,7 @@ const PUNTEGGIATURA_AI_BORDI = /^[\s,.;:!?–-]+|[\s,.;:!?–-]+$/gu;
  */
 
 /**
- * @typedef {{ ok: true, tipo: "impegno", inizio: string, durataMinuti?: number, titolo: string }
+ * @typedef {{ ok: true, tipo: "impegno", inizio: string, durataMinuti?: number, anticipoMinuti?: number | null, titolo: string }
  *   | { ok: true, tipo: "cosaDaFare", giorno: string, titolo: string }
  *   | { ok: false, errore: string }} FraseInterpretata
  */
@@ -73,9 +77,12 @@ export function interpretaFrase(frase, adesso) {
   if (!frase.trim()) return errore("Scrivi cosa devi fare e quando, per esempio \"domani alle 15 dentista\".");
   const testo = { resto: frase };
 
+  const anticipo = estraiAnticipo(testo);
   const orario = estraiOrario(testo);
   if (orario && "errore" in orario) return errore(orario.errore);
-  if (!orario && DURATA.test(testo.resto)) return errore("Manca l'orario: aggiungi per esempio \"alle 15\".");
+  if (!orario && (DURATA.test(testo.resto) || anticipo !== undefined)) {
+    return errore("Manca l'orario: aggiungi per esempio \"alle 15\".");
+  }
 
   const giorno = estraiGiorno(testo);
   if (estraiGiorno(testo)) return errore("Indica un solo giorno.");
@@ -90,8 +97,35 @@ export function interpretaFrase(frase, adesso) {
   if (data.getHours() !== orario.ore || data.getMinutes() !== orario.minuti) {
     return errore("Quell'orario non esiste: è la notte del passaggio all'ora legale.");
   }
-  const durata = orario.durataMinuti === undefined ? {} : { durataMinuti: orario.durataMinuti };
-  return { ok: true, tipo: "impegno", inizio: formattaInizio(data), ...durata, titolo };
+  return {
+    ok: true,
+    tipo: "impegno",
+    inizio: formattaInizio(data),
+    ...(orario.durataMinuti === undefined ? {} : { durataMinuti: orario.durataMinuti }),
+    ...(anticipo === undefined ? {} : { anticipoMinuti: anticipo }),
+    titolo,
+  };
+}
+
+/**
+ * @param {{ resto: string }} testo
+ * @returns {number | null | undefined} minuti; null = "senza promemoria"; undefined = non indicato
+ */
+function estraiAnticipo(testo) {
+  const anticipo = togli(testo, ANTICIPO);
+  if (!anticipo) return undefined;
+  return anticipo[5] ? null : minutiIndicati(anticipo);
+}
+
+/**
+ * I minuti di un'espressione QUANTO_TEMPO, dai suoi quattro gruppi a partire dal primo.
+ *
+ * @param {RegExpExecArray} trovato
+ */
+function minutiIndicati([, unOra, mezzOra, ore, minuti]) {
+  if (unOra) return 60;
+  if (mezzOra) return 30;
+  return ore ? Number(ore) * 60 : Number(minuti);
 }
 
 /** @param {string} messaggio */
@@ -125,8 +159,7 @@ function estraiOrario(testo) {
   if (!inizio || "errore" in inizio) return inizio;
   const durata = togli(testo, DURATA);
   if (!durata) return inizio;
-  const [, unOra, mezzOra, ore, minuti] = durata;
-  const durataMinuti = unOra ? 60 : mezzOra ? 30 : ore ? Number(ore) * 60 : Number(minuti);
+  const durataMinuti = minutiIndicati(durata);
   if (durataMinuti <= 0) return { errore: "La durata deve essere di almeno un minuto." };
   return { ...inizio, durataMinuti };
 }

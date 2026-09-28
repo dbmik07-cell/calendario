@@ -1,4 +1,4 @@
-import { formattaData, giornoDi } from "./data-locale.js";
+import { aggiungiMinuti, formattaData, formattaInizio, giornoDi } from "./data-locale.js";
 import { interpretaFrase } from "./frase.js";
 
 /** @import { Archivio, CosaDaFare, Impegno, Orologio } from "./tipi.js" */
@@ -62,12 +62,35 @@ export function creaAgenda({ orologio, archivio }) {
         titolo: interpretata.titolo,
         inizio: interpretata.inizio,
         ...(interpretata.durataMinuti === undefined ? {} : { durataMinuti: interpretata.durataMinuti }),
-        anticipoMinuti: ANTICIPO_PREDEFINITO_MINUTI,
+        anticipoMinuti: interpretata.anticipoMinuti === undefined ? ANTICIPO_PREDEFINITO_MINUTI : interpretata.anticipoMinuti,
         promemoriaInviato: false,
       };
       dati.impegni.push(impegno);
       archivio.salva(dati);
       return { ok: true, impegno };
+    },
+
+    /**
+     * I Promemoria da mostrare adesso: Impegni non ancora iniziati il cui Anticipo è
+     * cominciato. Ognuno viene restituito una volta sola, anche dopo un riavvio.
+     *
+     * @returns {Impegno[]}
+     */
+    promemoriaDovuti() {
+      const adesso = formattaInizio(orologio());
+      const dovuti = dati.impegni
+        .filter(
+          (i) =>
+            !i.promemoriaInviato &&
+            i.anticipoMinuti !== null &&
+            aggiungiMinuti(i.inizio, -i.anticipoMinuti) <= adesso &&
+            adesso < i.inizio,
+        )
+        .sort((a, b) => a.inizio.localeCompare(b.inizio));
+      if (dovuti.length === 0) return [];
+      for (const impegno of dovuti) impegno.promemoriaInviato = true;
+      archivio.salva(dati);
+      return dovuti.map((i) => ({ ...i }));
     },
 
     /**

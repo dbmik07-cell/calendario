@@ -6,9 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] Il Nucleo espone `promemoriaDovuti(adesso)`: dovuto se `inizio - anticipo <= adesso < inizio` e non già inviato; lo segna come inviato e lo salva
-- [ ] Frase: "avvisami N minuti prima", "avvisami N ore prima", "avvisami un'ora prima", "senza promemoria" (`anticipoMinuti: null`)
-- [ ] Il processo principale controlla ogni 30 secondi e mostra una notifica di Windows per ogni Promemoria dovuto
-- [ ] Cliccando la notifica il Widget viene mostrato e portato davanti
-- [ ] Nessuna notifica per Impegni già iniziati
-- [ ] Test Vitest via Nucleo: prima dell'Anticipo nessuno; dentro uno; seconda chiamata nessuno; dopo l'inizio nessuno; nuovo Nucleo sullo stesso archivio non ripete; "senza promemoria" mai
+- [x] Il Nucleo espone `promemoriaDovuti()` (l'"adesso" viene dall'orologio iniettato): dovuto se `inizio - anticipo <= adesso < inizio` e non già inviato; lo segna come inviato e lo salva
+- [x] Frase: "avvisami N minuti prima", "avvisami N ore prima", "avvisami un'ora prima", "senza promemoria" (`anticipoMinuti: null`)
+- [ ] Il processo principale controlla ogni 30 secondi e mostra una notifica di Windows per ogni Promemoria dovuto (codice fatto; Electron conferma la notifica, ma nella verifica non era visibile sullo schermo: da confermare a occhio)
+- [ ] Cliccando la notifica il Widget viene mostrato e portato davanti (codice fatto, non verificato)
+- [x] Nessuna notifica per Impegni già iniziati
+- [x] Test Vitest via Nucleo: prima dell'Anticipo nessuno; dentro uno; seconda chiamata nessuno; dopo l'inizio nessuno; nuovo Nucleo sullo stesso archivio non ripete; "senza promemoria" mai

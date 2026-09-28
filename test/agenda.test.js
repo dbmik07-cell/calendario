@@ -277,3 +277,114 @@ describe("Cose da fare", () => {
     expect(agenda.cancellaCosaDaFare("nessuna")).toMatchObject({ ok: false });
   });
 });
+
+describe("Promemoria", () => {
+  /**
+   * Orologio finto che si può spostare avanti durante il test.
+   * @param {string} isoLocale
+   */
+  function orologioMobile(isoLocale) {
+    let ora = new Date(isoLocale);
+    const orologio = () => new Date(ora);
+    /** @param {string} nuovaOra */
+    orologio.vaiA = (nuovaOra) => {
+      ora = new Date(nuovaOra);
+    };
+    return orologio;
+  }
+
+  /** Giovedì 1 ottobre 2026, ore 9; l'Impegno è domani alle 15. */
+  function preparaDentista(frase = "domani alle 15 dentista") {
+    const archivio = archivioVuoto();
+    const orologio = orologioMobile("2026-10-01T09:00");
+    const agenda = creaAgenda({ orologio, archivio });
+    agenda.aggiungiDaTesto(frase);
+    return { agenda, archivio, orologio };
+  }
+
+  /** @param {{ titolo: string }[]} promemoria */
+  const titoli = (promemoria) => promemoria.map((p) => p.titolo);
+
+  it("scatta 15 minuti prima dell'inizio, una volta sola", () => {
+    const { agenda, orologio } = preparaDentista();
+
+    orologio.vaiA("2026-10-02T14:44");
+    expect(agenda.promemoriaDovuti()).toEqual([]);
+
+    orologio.vaiA("2026-10-02T14:45");
+    expect(agenda.promemoriaDovuti()).toMatchObject([{ titolo: "Dentista", inizio: "2026-10-02T15:00" }]);
+
+    orologio.vaiA("2026-10-02T14:46");
+    expect(agenda.promemoriaDovuti()).toEqual([]);
+  });
+
+  it("non si ripete dopo un riavvio", () => {
+    const { agenda, archivio, orologio } = preparaDentista();
+    orologio.vaiA("2026-10-02T14:50");
+    agenda.promemoriaDovuti();
+
+    const dopoIlRiavvio = creaAgenda({ orologio, archivio });
+
+    expect(dopoIlRiavvio.promemoriaDovuti()).toEqual([]);
+  });
+
+  it("arriva se il PC si accende dopo l'avviso ma prima dell'inizio", () => {
+    const { archivio, orologio } = preparaDentista();
+
+    orologio.vaiA("2026-10-02T14:58");
+    const appenaAcceso = creaAgenda({ orologio, archivio });
+
+    expect(titoli(appenaAcceso.promemoriaDovuti())).toEqual(["Dentista"]);
+  });
+
+  it("non arriva per un Impegno già iniziato mentre il PC era spento", () => {
+    const { archivio, orologio } = preparaDentista();
+
+    orologio.vaiA("2026-10-02T15:00");
+    const appenaAcceso = creaAgenda({ orologio, archivio });
+
+    expect(appenaAcceso.promemoriaDovuti()).toEqual([]);
+  });
+
+  it.each([
+    ["domani alle 15 dentista avvisami un'ora prima", 60, "2026-10-02T14:00"],
+    ["domani alle 15 dentista avvisami 30 minuti prima", 30, "2026-10-02T14:30"],
+    ["domani alle 15 avvisami 2 ore prima dentista", 120, "2026-10-02T13:00"],
+    ["domani alle 15 dentista avvisami mezz'ora prima", 30, "2026-10-02T14:30"],
+  ])("con %j l'Anticipo è di %i minuti", (frase, anticipoMinuti, quando) => {
+    const { agenda, orologio } = preparaDentista(frase);
+    expect(agenda.giorno("2026-10-02").impegni).toMatchObject([{ titolo: "Dentista", anticipoMinuti }]);
+
+    orologio.vaiA(quando);
+
+    expect(titoli(agenda.promemoriaDovuti())).toEqual(["Dentista"]);
+  });
+
+  it("\"senza promemoria\" non avvisa mai", () => {
+    const { agenda, orologio } = preparaDentista("domani alle 15 dentista senza promemoria");
+    expect(agenda.giorno("2026-10-02").impegni).toMatchObject([{ titolo: "Dentista", anticipoMinuti: null }]);
+
+    for (const ora of ["2026-10-02T14:45", "2026-10-02T14:59"]) {
+      orologio.vaiA(ora);
+      expect(agenda.promemoriaDovuti()).toEqual([]);
+    }
+  });
+
+  it("più Promemoria dovuti insieme arrivano tutti", () => {
+    const { agenda, orologio } = preparaDentista();
+    agenda.aggiungiDaTesto("domani alle 15:05 parcheggio");
+
+    orologio.vaiA("2026-10-02T14:52");
+
+    expect(titoli(agenda.promemoriaDovuti())).toEqual(["Dentista", "Parcheggio"]);
+  });
+
+  it("l'Anticipo senza orario dà errore", () => {
+    const { agenda } = preparaDentista();
+
+    expect(agenda.aggiungiDaTesto("domani chiamare la banca avvisami un'ora prima")).toMatchObject({
+      ok: false,
+      errore: expect.stringContaining("Manca l'orario"),
+    });
+  });
+});
