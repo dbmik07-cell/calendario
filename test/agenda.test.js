@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { creaAgenda } from "../src/nucleo/agenda.js";
-import { creaArchivioInMemoria } from "../src/nucleo/archivio-in-memoria.js";
+import { datiVuoti } from "../src/nucleo/dati.js";
+import { creaArchivioInMemoria } from "./supporto/archivio-in-memoria.js";
 
 /** @param {string} isoLocale */
 const orologioFermoA = (isoLocale) => () => new Date(isoLocale);
 
-const agendaVuota = () =>
-  creaArchivioInMemoria({ versione: 1, impegni: [], coseDaFare: [] });
+const archivioVuoto = () => creaArchivioInMemoria(datiVuoti());
 
 describe("oggi", () => {
   it("è la data locale dell'orologio", () => {
-    const agenda = creaAgenda({ orologio: orologioFermoA("2026-12-31T23:59"), archivio: agendaVuota() });
+    const agenda = creaAgenda({ orologio: orologioFermoA("2026-12-31T23:59"), archivio: archivioVuoto() });
 
     expect(agenda.oggi()).toBe("2026-12-31");
   });
@@ -35,7 +35,7 @@ describe("giorno", () => {
 describe("aggiungiDaTesto", () => {
   /** Giovedì 1 ottobre 2026, ore 9. */
   const adesso = "2026-10-01T09:00";
-  const nuovaAgenda = (archivio = agendaVuota()) =>
+  const nuovaAgenda = (archivio = archivioVuoto()) =>
     creaAgenda({ orologio: orologioFermoA(adesso), archivio });
 
   it("aggiunge un Impegno nel giorno e all'orario della Frase", () => {
@@ -88,7 +88,7 @@ describe("aggiungiDaTesto", () => {
     ["domani alle 25 dentista", "Orario non valido"],
     ["domani alle 15:75 dentista", "Orario non valido"],
   ])("%j dà l'errore %j e non salva nulla", (frase, errore) => {
-    const archivio = agendaVuota();
+    const archivio = archivioVuoto();
     const agenda = nuovaAgenda(archivio);
 
     expect(agenda.aggiungiDaTesto(frase)).toEqual({ ok: false, errore: expect.stringContaining(errore) });
@@ -108,7 +108,7 @@ describe("aggiungiDaTesto", () => {
   });
 
   it("salva l'Impegno: un nuovo Nucleo sullo stesso archivio lo ritrova", () => {
-    const archivio = agendaVuota();
+    const archivio = archivioVuoto();
     nuovaAgenda(archivio).aggiungiDaTesto("domani alle 15 dentista");
 
     expect(nuovaAgenda(archivio).giorno("2026-10-02").impegni.map((i) => i.titolo)).toEqual(["Dentista"]);

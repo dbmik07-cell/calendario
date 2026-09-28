@@ -1,5 +1,7 @@
 // Interprete delle Frasi: dettaglio interno del Nucleo dell'Agenda.
 
+import { formattaInizio } from "./data-locale.js";
+
 const GIORNI_RELATIVI = /\b(oggi|domani|dopodomani)\b/i;
 /** @type {Record<string, number>} */
 const SCARTO_GIORNI = { oggi: 0, domani: 1, dopodomani: 2 };
@@ -48,17 +50,4 @@ const errore = (messaggio) => /** @type {const} */ ({ ok: false, errore: messagg
 function togli(testo, trovato) {
   if (!trovato) return testo;
   return testo.slice(0, trovato.index) + " " + testo.slice(trovato.index + trovato[0].length);
-}
-
-/** @param {number} n */
-const due = (n) => String(n).padStart(2, "0");
-
-/** @param {Date} d */
-export function formattaData(d) {
-  return `${d.getFullYear()}-${due(d.getMonth() + 1)}-${due(d.getDate())}`;
-}
-
-/** @param {Date} d */
-function formattaInizio(d) {
-  return `${formattaData(d)}T${due(d.getHours())}:${due(d.getMinutes())}`;
 }

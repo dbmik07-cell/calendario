@@ -1,4 +1,5 @@
-import { formattaData, interpretaFrase } from "./frase.js";
+import { formattaData, giornoDi } from "./data-locale.js";
+import { interpretaFrase } from "./frase.js";
 
 /** @import { Archivio, Impegno, Orologio } from "./tipi.js" */
 
@@ -22,7 +23,7 @@ export function creaAgenda({ orologio, archivio }) {
     giorno(data) {
       return {
         impegni: dati.impegni
-          .filter((i) => i.inizio.slice(0, 10) === data)
+          .filter((i) => giornoDi(i.inizio) === data)
           .sort((a, b) => a.inizio.localeCompare(b.inizio)),
       };
     },

@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
+import { datiVuoti } from "./nucleo/dati.js";
 
 /** @import { Archivio, DatiAgenda } from "./nucleo/tipi.js" */
 
@@ -12,7 +13,7 @@ import { dirname } from "node:path";
 export function creaArchivioSuFile(percorso) {
   return {
     carica() {
-      if (!existsSync(percorso)) return { versione: 1, impegni: [], coseDaFare: [] };
+      if (!existsSync(percorso)) return datiVuoti();
       return /** @type {DatiAgenda} */ (JSON.parse(readFileSync(percorso, "utf8")));
     },
 

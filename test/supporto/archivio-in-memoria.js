@@ -1,4 +1,4 @@
-/** @import { Archivio, DatiAgenda } from "./tipi.js" */
+/** @import { Archivio, DatiAgenda } from "../../src/nucleo/tipi.js" */
 
 /**
  * @param {DatiAgenda} dati

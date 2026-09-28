@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { creaArchivioSuFile } from "../src/archivio-su-file.js";
+import { datiVuoti } from "../src/nucleo/dati.js";
 
 describe("Archivio su file", () => {
   /** @type {string} */
@@ -17,7 +18,7 @@ describe("Archivio su file", () => {
   it("parte da un'Agenda vuota se il file non esiste", () => {
     const archivio = creaArchivioSuFile(join(cartella, "agenda.json"));
 
-    expect(archivio.carica()).toEqual({ versione: 1, impegni: [], coseDaFare: [] });
+    expect(archivio.carica()).toEqual(datiVuoti());
   });
 
   it("legge un'Agenda scritta a mano", () => {
