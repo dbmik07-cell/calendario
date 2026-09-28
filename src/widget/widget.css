@@ -113,3 +113,49 @@ body {
   color: #86868b;
   font-size: 13px;
 }
+
+.sezione {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #86868b;
+  margin: 12px 0 2px;
+}
+
+.cosa-da-fare {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cosa-da-fare label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.cosa-da-fare input {
+  accent-color: #0a84ff;
+  margin: 0;
+}
+
+.cosa-da-fare.fatta label {
+  color: #86868b;
+  text-decoration: line-through;
+}
+
+.cancella {
+  border: none;
+  background: none;
+  color: #86868b;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  visibility: hidden;
+}
+
+.cosa-da-fare:hover .cancella {
+  visibility: visible;
+}

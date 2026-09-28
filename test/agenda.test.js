@@ -129,7 +129,8 @@ describe("aggiungiDaTesto", () => {
   it("senza durata l'Impegno non ha durataMinuti", () => {
     const risultato = nuovaAgenda().aggiungiDaTesto("domani alle 15 dentista");
 
-    expect(risultato.ok && "durataMinuti" in risultato.impegno).toBe(false);
+    expect(risultato).toMatchObject({ ok: true, impegno: { titolo: "Dentista" } });
+    expect(risultato).not.toHaveProperty("impegno.durataMinuti");
   });
 
   it.each([
@@ -152,7 +153,6 @@ describe("aggiungiDaTesto", () => {
 
   it.each([
     ["", "Scrivi cosa devi fare e quando"],
-    ["domani dentista", "Manca l'orario"],
     ["domani alle 15", "Manca il titolo"],
     ["domani alle 25 dentista", "Orario non valido"],
     ["domani alle 15:75 dentista", "Orario non valido"],
@@ -206,5 +206,74 @@ describe("aggiungiDaTesto", () => {
     nuovaAgenda(archivio).aggiungiDaTesto("domani alle 15 dentista");
 
     expect(nuovaAgenda(archivio).giorno("2026-10-02").impegni.map((i) => i.titolo)).toEqual(["Dentista"]);
+  });
+});
+
+describe("Cose da fare", () => {
+  /** Giovedì 1 ottobre 2026, ore 9. */
+  const adesso = "2026-10-01T09:00";
+  const nuovaAgenda = (archivio = archivioVuoto()) =>
+    creaAgenda({ orologio: orologioFermoA(adesso), archivio });
+
+  it.each([
+    ["domani chiamare la banca", "2026-10-02", "Chiamare la banca"],
+    ["chiamare la banca", "2026-10-01", "Chiamare la banca"],
+    ["giovedì comprare il pane", "2026-10-01", "Comprare il pane"],
+    ["il 12 ottobre rinnovare la carta d'identità", "2026-10-12", "Rinnovare la carta d'identità"],
+  ])("una Frase senza orario, %j, diventa una Cosa da fare del %s", (frase, giorno, titolo) => {
+    const agenda = nuovaAgenda();
+
+    expect(agenda.aggiungiDaTesto(frase)).toMatchObject({ ok: true, cosaDaFare: { titolo, giorno, fatta: false } });
+    expect(agenda.giorno(giorno)).toMatchObject({ impegni: [], coseDaFare: [{ titolo }] });
+  });
+
+  it.each([["domani per un'ora dentista"], ["domani"]])("%j dà errore e non salva nulla", (frase) => {
+    const archivio = archivioVuoto();
+
+    expect(nuovaAgenda(archivio).aggiungiDaTesto(frase)).toMatchObject({ ok: false });
+    expect(archivio.carica().coseDaFare).toEqual([]);
+  });
+
+  it("il giorno separa Impegni e Cose da fare", () => {
+    const agenda = nuovaAgenda();
+    agenda.aggiungiDaTesto("domani alle 15 dentista");
+    agenda.aggiungiDaTesto("domani chiamare la banca");
+
+    const { impegni, coseDaFare } = agenda.giorno("2026-10-02");
+
+    expect(impegni.map((i) => i.titolo)).toEqual(["Dentista"]);
+    expect(coseDaFare.map((c) => c.titolo)).toEqual(["Chiamare la banca"]);
+  });
+
+  it("si spunta come fatta, si toglie la spunta e resta salvata", () => {
+    const archivio = archivioVuoto();
+    const agenda = nuovaAgenda(archivio);
+    const aggiunta = agenda.aggiungiDaTesto("domani chiamare la banca");
+    const id = aggiunta.ok && "cosaDaFare" in aggiunta ? aggiunta.cosaDaFare.id : "";
+
+    agenda.segnaFatta(id, true);
+    expect(nuovaAgenda(archivio).giorno("2026-10-02").coseDaFare).toMatchObject([{ fatta: true }]);
+
+    agenda.segnaFatta(id, false);
+    expect(nuovaAgenda(archivio).giorno("2026-10-02").coseDaFare).toMatchObject([{ fatta: false }]);
+  });
+
+  it("si cancella, anche dall'archivio", () => {
+    const archivio = archivioVuoto();
+    const agenda = nuovaAgenda(archivio);
+    const aggiunta = agenda.aggiungiDaTesto("domani chiamare la banca");
+    const id = aggiunta.ok && "cosaDaFare" in aggiunta ? aggiunta.cosaDaFare.id : "";
+
+    expect(agenda.cancellaCosaDaFare(id)).toEqual({ ok: true });
+
+    expect(agenda.giorno("2026-10-02").coseDaFare).toEqual([]);
+    expect(nuovaAgenda(archivio).giorno("2026-10-02").coseDaFare).toEqual([]);
+  });
+
+  it("spuntare o cancellare una Cosa da fare che non esiste dà errore", () => {
+    const agenda = nuovaAgenda();
+
+    expect(agenda.segnaFatta("nessuna", true)).toMatchObject({ ok: false });
+    expect(agenda.cancellaCosaDaFare("nessuna")).toMatchObject({ ok: false });
   });
 });

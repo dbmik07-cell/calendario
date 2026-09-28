@@ -1,10 +1,14 @@
-// Unico ponte tra il Widget e il Nucleo dell'Agenda.
+// Unico ponte tra il Widget e il Nucleo dell'Agenda: ogni metodo diventa una chiamata IPC.
 const { contextBridge, ipcRenderer } = require("electron");
 
-contextBridge.exposeInMainWorld("agenda", {
-  oggi: () => ipcRenderer.invoke("agenda:oggi"),
-  /** @param {string} data */
-  giorno: (data) => ipcRenderer.invoke("agenda:giorno", data),
-  /** @param {string} frase */
-  aggiungiDaTesto: (frase) => ipcRenderer.invoke("agenda:aggiungiDaTesto", frase),
-});
+const METODI_DEL_NUCLEO = ["oggi", "giorno", "aggiungiDaTesto", "segnaFatta", "cancellaCosaDaFare"];
+
+contextBridge.exposeInMainWorld(
+  "agenda",
+  Object.fromEntries(
+    METODI_DEL_NUCLEO.map((metodo) => [
+      metodo,
+      (/** @type {unknown[]} */ ...argomenti) => ipcRenderer.invoke(`agenda:${metodo}`, ...argomenti),
+    ]),
+  ),
+);

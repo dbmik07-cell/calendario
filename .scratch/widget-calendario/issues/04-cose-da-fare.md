@@ -6,9 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] `aggiungiDaTesto` senza orario crea una Cosa da fare (senza giorno → oggi)
-- [ ] `giorno(data)` restituisce Impegni e Cose da fare separati
-- [ ] Il Widget mostra le Cose da fare in una sezione a parte, con casella di spunta
-- [ ] `segnaFatta(id, fatta)` e `cancellaCosaDaFare(id)` funzionano e vengono salvati
-- [ ] Le Cose da fare fatte appaiono barrate
-- [ ] Test Vitest via Nucleo: creazione, spunta, rimozione della spunta, cancellazione, persistenza su un nuovo Nucleo con lo stesso archivio
+- [x] `aggiungiDaTesto` senza orario crea una Cosa da fare (senza giorno → oggi)
+- [x] `giorno(data)` restituisce Impegni e Cose da fare separati
+- [x] Il Widget mostra le Cose da fare in una sezione a parte, con casella di spunta
+- [x] `segnaFatta(id, fatta)` e `cancellaCosaDaFare(id)` funzionano e vengono salvati
+- [x] Le Cose da fare fatte appaiono barrate
+- [x] Test Vitest via Nucleo: creazione, spunta, rimozione della spunta, cancellazione, persistenza su un nuovo Nucleo con lo stesso archivio

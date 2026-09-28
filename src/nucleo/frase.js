@@ -1,7 +1,7 @@
 // Interprete delle Frasi: dettaglio interno del Nucleo dell'Agenda.
 // Toglie dalla Frase, un pezzo alla volta, orario e giorno; quello che resta è il titolo.
 
-import { formattaInizio } from "./data-locale.js";
+import { formattaData, formattaInizio } from "./data-locale.js";
 
 // Confini di parola che conoscono le lettere accentate (\b di JavaScript no).
 const INIZIO = "(?<![\\p{L}\\p{N}])";
@@ -57,31 +57,41 @@ const PUNTEGGIATURA_AI_BORDI = /^[\s,.;:!?–-]+|[\s,.;:!?–-]+$/gu;
  */
 
 /**
+ * @typedef {{ ok: true, tipo: "impegno", inizio: string, durataMinuti?: number, titolo: string }
+ *   | { ok: true, tipo: "cosaDaFare", giorno: string, titolo: string }
+ *   | { ok: false, errore: string }} FraseInterpretata
+ */
+
+/**
+ * Con un orario la Frase descrive un Impegno; senza, una Cosa da fare.
+ *
  * @param {string} frase
  * @param {Date} adesso
- * @returns {{ ok: true, inizio: string, durataMinuti?: number, titolo: string } | { ok: false, errore: string }}
+ * @returns {FraseInterpretata}
  */
 export function interpretaFrase(frase, adesso) {
   if (!frase.trim()) return errore("Scrivi cosa devi fare e quando, per esempio \"domani alle 15 dentista\".");
   const testo = { resto: frase };
 
   const orario = estraiOrario(testo);
-  if (!orario) return errore("Manca l'orario: aggiungi per esempio \"alle 15\".");
-  if ("errore" in orario) return errore(orario.errore);
+  if (orario && "errore" in orario) return errore(orario.errore);
+  if (!orario && DURATA.test(testo.resto)) return errore("Manca l'orario: aggiungi per esempio \"alle 15\".");
 
   const giorno = estraiGiorno(testo);
   if (estraiGiorno(testo)) return errore("Indica un solo giorno.");
   const data = risolviGiorno(giorno, adesso, orario);
   if (!data) return errore("Data non valida: controlla giorno e mese.");
+
+  const titolo = ripulisciTitolo(testo.resto);
+  if (!titolo) return errore("Manca il titolo: cosa devi fare?");
+  if (!orario) return { ok: true, tipo: "cosaDaFare", giorno: formattaData(data), titolo };
+
   data.setHours(orario.ore, orario.minuti);
   if (data.getHours() !== orario.ore || data.getMinutes() !== orario.minuti) {
     return errore("Quell'orario non esiste: è la notte del passaggio all'ora legale.");
   }
-
-  const titolo = ripulisciTitolo(testo.resto);
-  if (!titolo) return errore("Manca il titolo: cosa devi fare?");
   const durata = orario.durataMinuti === undefined ? {} : { durataMinuti: orario.durataMinuti };
-  return { ok: true, inizio: formattaInizio(data), ...durata, titolo };
+  return { ok: true, tipo: "impegno", inizio: formattaInizio(data), ...durata, titolo };
 }
 
 /** @param {string} messaggio */
@@ -211,12 +221,12 @@ const annoSe = (anno) => (anno ? { anno: Number(anno) } : {});
  *
  * @param {Giorno | null} giorno
  * @param {Date} adesso
- * @param {Orario} orario
+ * @param {Orario | null} orario null per una Cosa da fare: oggi vale ancora
  * @returns {Date | null}
  */
 function risolviGiorno(giorno, adesso, orario) {
   const oggi = new Date(adesso.getFullYear(), adesso.getMonth(), adesso.getDate());
-  const orarioPassato = minutiDelGiorno(orario) < adesso.getHours() * 60 + adesso.getMinutes();
+  const orarioPassato = orario !== null && minutiDelGiorno(orario) < adesso.getHours() * 60 + adesso.getMinutes();
   /** @param {Date} d */
   const ancoraDaVenire = (d) => d > oggi || (d.getTime() === oggi.getTime() && !orarioPassato);
   /** @param {number} giorni */

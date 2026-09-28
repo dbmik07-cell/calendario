@@ -1,6 +1,6 @@
 import { aggiungiMinuti, giornoDi, leggiData, orarioDi } from "../nucleo/data-locale.js";
 
-/** @import { Impegno } from "../nucleo/tipi.js" */
+/** @import { CosaDaFare, Impegno } from "../nucleo/tipi.js" */
 
 const oggi = await window.agenda.oggi();
 const [anno, mese, giornoDelMese] = oggi.split("-").map(Number);
@@ -19,14 +19,16 @@ elemento("nuova-frase").addEventListener("submit", async (evento) => {
     esito.textContent = risultato.errore;
     return;
   }
-  const { impegno } = risultato;
-  esito.textContent = `Aggiunto: ${impegno.titolo}, ${descriviData(giornoDi(impegno.inizio))}, ${descriviOrario(impegno)}`;
+  esito.textContent =
+    "impegno" in risultato
+      ? `Aggiunto: ${risultato.impegno.titolo}, ${descriviData(giornoDi(risultato.impegno.inizio))}, ${descriviOrario(risultato.impegno)}`
+      : `Da fare: ${risultato.cosaDaFare.titolo}, ${descriviData(risultato.cosaDaFare.giorno)}`;
   campo.value = "";
   await aggiornaGiornata();
 });
 
 async function aggiornaGiornata() {
-  mostraGiornata(oggi, (await window.agenda.giorno(oggi)).impegni);
+  mostraGiornata(oggi, await window.agenda.giorno(oggi));
 }
 
 /** @param {string} data "YYYY-MM-DD" */
@@ -72,9 +74,9 @@ function mostraMiniCalendario(anno, mese, giornoEvidenziato) {
 
 /**
  * @param {string} data
- * @param {Impegno[]} impegni
+ * @param {{ impegni: Impegno[], coseDaFare: CosaDaFare[] }} giornata
  */
-function mostraGiornata(data, impegni) {
+function mostraGiornata(data, { impegni, coseDaFare }) {
   elemento("titolo-giorno").textContent = descriviData(data);
 
   elemento("impegni").replaceChildren(
@@ -87,7 +89,40 @@ function mostraGiornata(data, impegni) {
       return voce;
     }),
   );
-  elemento("giornata-vuota").hidden = impegni.length > 0;
+  elemento("cose-da-fare").replaceChildren(...coseDaFare.map(voceCosaDaFare));
+  elemento("sezione-cose-da-fare").hidden = coseDaFare.length === 0;
+  elemento("giornata-vuota").hidden = impegni.length + coseDaFare.length > 0;
+}
+
+/** @param {CosaDaFare} cosaDaFare */
+function voceCosaDaFare(cosaDaFare) {
+  const voce = document.createElement("li");
+  voce.className = "cosa-da-fare";
+  voce.classList.toggle("fatta", cosaDaFare.fatta);
+
+  const etichetta = document.createElement("label");
+  const spunta = document.createElement("input");
+  spunta.type = "checkbox";
+  spunta.checked = cosaDaFare.fatta;
+  spunta.addEventListener("change", async () => {
+    await window.agenda.segnaFatta(cosaDaFare.id, spunta.checked);
+    await aggiornaGiornata();
+  });
+  etichetta.append(spunta, cosaDaFare.titolo);
+
+  const cancella = document.createElement("button");
+  cancella.type = "button";
+  cancella.className = "cancella";
+  cancella.textContent = "×";
+  cancella.title = "Cancella";
+  cancella.setAttribute("aria-label", `Cancella ${cosaDaFare.titolo}`);
+  cancella.addEventListener("click", async () => {
+    await window.agenda.cancellaCosaDaFare(cosaDaFare.id);
+    await aggiornaGiornata();
+  });
+
+  voce.append(etichetta, cancella);
+  return voce;
 }
 
 /** @param {string} id */

@@ -1,11 +1,16 @@
-import type { Impegno } from "../nucleo/tipi.js";
+import type { creaAgenda } from "../nucleo/agenda.js";
+
+type Nucleo = ReturnType<typeof creaAgenda>;
+
+/** Il Nucleo visto dal Widget: stessi metodi, ma attraverso l'IPC, quindi asincroni. */
+type NucleoRemoto = {
+  [Metodo in keyof Nucleo]: Nucleo[Metodo] extends (...argomenti: infer A) => infer R
+    ? (...argomenti: A) => Promise<R>
+    : never;
+};
 
 declare global {
   interface Window {
-    agenda: {
-      oggi(): Promise<string>;
-      giorno(data: string): Promise<{ impegni: Impegno[] }>;
-      aggiungiDaTesto(frase: string): Promise<{ ok: true; impegno: Impegno } | { ok: false; errore: string }>;
-    };
+    agenda: NucleoRemoto;
   }
 }

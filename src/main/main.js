@@ -12,9 +12,12 @@ app.whenReady().then(() => {
     archivio: creaArchivioSuFile(join(app.getPath("userData"), "agenda.json")),
   });
 
-  ipcMain.handle("agenda:oggi", () => agenda.oggi());
-  ipcMain.handle("agenda:giorno", (_evento, /** @type {string} */ data) => agenda.giorno(data));
-  ipcMain.handle("agenda:aggiungiDaTesto", (_evento, /** @type {string} */ frase) => agenda.aggiungiDaTesto(frase));
+  // Ogni metodo del Nucleo risponde a "agenda:<metodo>" (vedi preload.cjs).
+  for (const [metodo, funzione] of Object.entries(agenda)) {
+    ipcMain.handle(`agenda:${metodo}`, (_evento, ...argomenti) =>
+      /** @type {(...a: unknown[]) => unknown} */ (funzione)(...argomenti),
+    );
+  }
 
   const widget = new BrowserWindow({
     width: 320,
