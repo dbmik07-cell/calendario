@@ -14,7 +14,30 @@ const CONTROLLO_PROMEMORIA_MS = 30_000;
 // Senza un AppUserModelID Windows non mostra le notifiche di un'app non installata.
 app.setAppUserModelId(app.isPackaged ? "it.calendario.widget" : process.execPath);
 
-app.whenReady().then(() => {
+/** @type {Electron.BrowserWindow | undefined} */
+let widgetEsistente;
+let mostraAllaCreazione = false;
+
+// Il secondo processo termina prima di leggere l'Agenda o registrare Promemoria.
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    // Copre anche un secondo avvio mentre il renderer sta ancora caricando.
+    mostraAllaCreazione = true;
+    mostraWidgetEsistente();
+  });
+  app.whenReady().then(avvia);
+}
+
+function mostraWidgetEsistente() {
+  if (!widgetEsistente || widgetEsistente.isDestroyed()) return;
+  if (widgetEsistente.isMinimized()) widgetEsistente.restore();
+  widgetEsistente.show();
+  widgetEsistente.focus();
+}
+
+function avvia() {
   const archivio = creaArchivioSuFile(join(app.getPath("userData"), "agenda.json"));
   const agenda = creaAgenda({
     orologio: () => new Date(),
@@ -22,6 +45,10 @@ app.whenReady().then(() => {
   });
 
   const widget = creaWidget(qui);
+  widgetEsistente = widget;
+  widget.once("ready-to-show", () => {
+    if (mostraAllaCreazione) mostraWidgetEsistente();
+  });
   const pubblicaAggiornamento = () => {
     if (!widget.isDestroyed()) widget.webContents.send("widget:agendaAggiornata", agenda.avvisoArchivio());
   };
@@ -58,6 +85,6 @@ app.whenReady().then(() => {
   };
   controllaPromemoria();
   setInterval(controllaPromemoria, CONTROLLO_PROMEMORIA_MS);
-});
+}
 
 app.on("window-all-closed", () => app.quit());

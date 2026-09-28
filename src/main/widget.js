@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, Tray } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, screen, Tray } from "electron";
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
@@ -9,6 +9,23 @@ export function creaWidget(qui) {
   const percorso = join(app.getPath("userData"), "widget.json");
   let impostazioni = leggiImpostazioni(percorso);
   let inPrimoPiano = impostazioni.inPrimoPiano;
+  let avviaConWindows = impostazioni.avviaConWindows;
+  // In sviluppo Electron deve ricevere il percorso assoluto del progetto:
+  // Windows non usa la directory corrente di `npm start` all'accesso.
+  const avvio = { name: "Calendario", path: process.execPath,
+    args: app.isPackaged ? [] : [`"${app.getAppPath()}"`] };
+  function registraAvvio() {
+    try {
+      app.setLoginItemSettings({ ...avvio, openAtLogin: avviaConWindows, enabled: avviaConWindows });
+    } catch (errore) {
+      dialog.showErrorBox("Avvio con Windows", `Impossibile aggiornare l'avvio automatico: ${errore}`);
+    }
+  }
+  function avvioAttivo() {
+    return app.getLoginItemSettings(avvio).launchItems.some(voce =>
+      voce.name === avvio.name && voce.scope === "user" && voce.enabled);
+  }
+  registraAvvio();
   let inUscita = false;
   const widget = new BrowserWindow({
     ...rettangoloVisibile(impostazioni.rettangolo),
@@ -33,7 +50,7 @@ export function creaWidget(qui) {
   tray.setToolTip("Calendario");
 
   function salva() {
-    impostazioni = { rettangolo: widget.getBounds(), inPrimoPiano };
+    impostazioni = { rettangolo: widget.getBounds(), inPrimoPiano, avviaConWindows };
     try {
       mkdirSync(dirname(percorso), { recursive: true });
       writeFileSync(`${percorso}.tmp`, JSON.stringify(impostazioni, null, 2), "utf8");
@@ -54,6 +71,12 @@ export function creaWidget(qui) {
       { label: "Modalità in primo piano", type: "checkbox", checked: inPrimoPiano, click: (voce) => {
         inPrimoPiano = voce.checked;
         applicaModalita();
+        salva();
+        aggiornaMenu();
+      } },
+      { label: "Avvia con Windows", type: "checkbox", checked: avvioAttivo(), click: (voce) => {
+        avviaConWindows = voce.checked;
+        registraAvvio();
         salva();
         aggiornaMenu();
       } },
@@ -132,10 +155,13 @@ function leggiImpostazioni(percorso) {
     const dati = JSON.parse(readFileSync(percorso, "utf8"));
     const r = dati.rettangolo;
     if (r && [r.x, r.y, r.width, r.height].every(Number.isSafeInteger) && r.width > 0 && r.height > 0) {
-      return { rettangolo: /** @type {Electron.Rectangle} */ (r), inPrimoPiano: dati.inPrimoPiano === true };
+      return { rettangolo: /** @type {Electron.Rectangle} */ (r), inPrimoPiano: dati.inPrimoPiano === true,
+        avviaConWindows: dati.avviaConWindows !== false };
     }
+    return { rettangolo: undefined, inPrimoPiano: dati.inPrimoPiano === true,
+      avviaConWindows: dati.avviaConWindows !== false };
   } catch { /* Primo avvio o impostazioni illeggibili: valori predefiniti. */ }
-  return { rettangolo: undefined, inPrimoPiano: false };
+  return { rettangolo: undefined, inPrimoPiano: false, avviaConWindows: true };
 }
 
 /** Mantiene tutta la finestra raggiungibile nell'area di lavoro. @param {Electron.Rectangle | undefined} r */
