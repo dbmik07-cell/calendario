@@ -2,7 +2,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 // Ogni metodo del Nucleo dell'Agenda diventa una chiamata IPC "agenda:<metodo>".
-const METODI_DEL_NUCLEO = ["oggi", "giorno", "giorniOccupati", "aggiungiDaTesto", "segnaFatta", "cancellaCosaDaFare"];
+const METODI_DEL_NUCLEO = ["oggi", "giorno", "giorniOccupati", "aggiungiDaTesto", "segnaFatta", "cancellaCosaDaFare", "modificaImpegno", "cancellaImpegno"];
 
 contextBridge.exposeInMainWorld(
   "agenda",

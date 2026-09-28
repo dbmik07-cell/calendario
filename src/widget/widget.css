@@ -251,3 +251,18 @@ body {
 .ridimensiona.ne, .ridimensiona.nw, .ridimensiona.se, .ridimensiona.sw { width: 12px; height: 12px; }
 .ridimensiona.ne, .ridimensiona.sw { cursor: nesw-resize; }
 .ridimensiona.nw, .ridimensiona.se { cursor: nwse-resize; }
+
+.apri-impegno { width: 100%; border: 0; padding: 3px 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+.apri-impegno:hover { background: rgba(0, 0, 0, 0.04); }
+.apri-impegno:focus-visible { outline: 2px solid #0a84ff; border-radius: 4px; }
+#modifica-impegno { box-sizing: border-box; width: calc(100% - 24px); max-width: 360px; max-height: calc(100% - 24px); padding: 16px; border: 1px solid #d2d2d7; border-radius: 14px; background: #f6f6f8; color: #1d1d1f; overflow: auto; }
+#modifica-impegno::backdrop { background: rgba(0, 0, 0, 0.25); }
+#modulo-impegno h2 { margin: 0 0 12px; font-size: 16px; }
+#modulo-impegno label { display: block; margin: 8px 0; font-size: 12px; }
+#modulo-impegno input:not([type="checkbox"]) { box-sizing: border-box; width: 100%; min-width: 0; margin-top: 3px; padding: 6px; border: 1px solid #bcbcc2; border-radius: 6px; background: white; font: inherit; }
+#modulo-impegno .nessun-promemoria { display: flex; align-items: center; gap: 6px; }
+#modulo-impegno button { padding: 6px 9px; border: 1px solid #bcbcc2; border-radius: 6px; background: white; color: inherit; font: inherit; font-size: 12px; cursor: pointer; }
+#modulo-impegno button:disabled { opacity: 0.5; cursor: wait; }
+.azioni-modifica { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+#modulo-impegno button[type="submit"] { background: #0a64cc; border-color: #0a64cc; color: white; }
+#errore-modifica, #conferma-cancellazione { font-size: 12px; color: #b42318; }

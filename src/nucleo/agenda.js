@@ -1,4 +1,4 @@
-import { aggiungiMinuti, formattaData, formattaInizio, giornoDi } from "./data-locale.js";
+import { aggiungiMinuti, formattaData, formattaInizio, giornoDi, leggiData } from "./data-locale.js";
 import { interpretaFrase } from "./frase.js";
 
 /** @import { Archivio, CosaDaFare, Impegno, Orologio } from "./tipi.js" */
@@ -21,6 +21,53 @@ export function creaAgenda({ orologio, archivio }) {
   const cosaDaFareNonTrovata = { ok: false, errore: "Questa Cosa da fare non c'è più." };
 
   return {
+    /**
+     * null rimuove la durata; i campi omessi mantengono il valore corrente.
+     * @param {string} id
+     * @param {{ titolo?: string, inizio?: string, durataMinuti?: number | null, anticipoMinuti?: number | null }} modifiche
+     * @returns {Esito}
+     */
+    modificaImpegno(id, modifiche) {
+      const indice = dati.impegni.findIndex((i) => i.id === id);
+      if (indice < 0) return { ok: false, errore: "Questo Impegno non c'è più." };
+      const precedente = dati.impegni[indice];
+      const nuovo = { ...precedente };
+      if (modifiche.titolo !== undefined) nuovo.titolo = modifiche.titolo.trim();
+      if (modifiche.inizio !== undefined) nuovo.inizio = modifiche.inizio;
+      if (modifiche.anticipoMinuti !== undefined) nuovo.anticipoMinuti = modifiche.anticipoMinuti;
+      if (modifiche.durataMinuti === null) delete nuovo.durataMinuti;
+      else if (modifiche.durataMinuti !== undefined) nuovo.durataMinuti = modifiche.durataMinuti;
+      if (!nuovo.titolo) return { ok: false, errore: "Il titolo non può essere vuoto." };
+      if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(nuovo.inizio) || formattaInizio(leggiData(nuovo.inizio)) !== nuovo.inizio) {
+        return { ok: false, errore: "Data o orario non validi." };
+      }
+      if (nuovo.durataMinuti !== undefined && (!Number.isSafeInteger(nuovo.durataMinuti) || nuovo.durataMinuti <= 0)) {
+        return { ok: false, errore: "La durata deve essere un numero intero positivo di minuti." };
+      }
+      if (nuovo.anticipoMinuti !== null && (!Number.isSafeInteger(nuovo.anticipoMinuti) || nuovo.anticipoMinuti < 0)) {
+        return { ok: false, errore: "L'Anticipo deve essere un numero intero di minuti, almeno zero." };
+      }
+      const inizioMs = leggiData(nuovo.inizio).getTime();
+      if (!Number.isFinite(new Date(inizioMs + (nuovo.durataMinuti ?? 0) * 60_000).getTime()) ||
+          !Number.isFinite(new Date(inizioMs - (nuovo.anticipoMinuti ?? 0) * 60_000).getTime())) {
+        return { ok: false, errore: "Durata o Anticipo troppo grandi." };
+      }
+      if (nuovo.inizio !== precedente.inizio || nuovo.anticipoMinuti !== precedente.anticipoMinuti) nuovo.promemoriaInviato = false;
+      const aggiornati = { ...dati, impegni: dati.impegni.map((i, n) => n === indice ? nuovo : i) };
+      archivio.salva(aggiornati);
+      dati.impegni = aggiornati.impegni;
+      return { ok: true };
+    },
+
+    /** @param {string} id @returns {Esito} */
+    cancellaImpegno(id) {
+      if (!dati.impegni.some((i) => i.id === id)) return { ok: false, errore: "Questo Impegno non c'è più." };
+      const aggiornati = { ...dati, impegni: dati.impegni.filter((i) => i.id !== id) };
+      archivio.salva(aggiornati);
+      dati.impegni = aggiornati.impegni;
+      return { ok: true };
+    },
+
     /** @returns {string} La data locale di oggi, "YYYY-MM-DD". */
     oggi() {
       return formattaData(orologio());

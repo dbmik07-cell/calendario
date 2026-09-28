@@ -37,5 +37,27 @@
         <p id="giornata-vuota" class="vuota" hidden>Niente in programma</p>
       </section>
     </main>
+    <dialog id="modifica-impegno" aria-labelledby="titolo-modifica">
+      <form id="modulo-impegno">
+        <h2 id="titolo-modifica">Modifica Impegno</h2>
+        <label>Titolo<input id="modifica-titolo" required /></label>
+        <label>Giorno<input id="modifica-giorno" type="date" required /></label>
+        <label>Orario<input id="modifica-orario" type="time" required /></label>
+        <label>Durata in minuti<input id="modifica-durata" type="number" min="1" step="1" placeholder="Senza durata" /></label>
+        <label>Anticipo in minuti<input id="modifica-anticipo" type="number" min="0" step="1" required /></label>
+        <label class="nessun-promemoria"><input id="modifica-senza-promemoria" type="checkbox" />Nessun Promemoria</label>
+        <p id="errore-modifica" role="alert" hidden></p>
+        <div class="azioni-modifica">
+          <button type="submit">Salva</button>
+          <button type="button" id="annulla-modifica">Annulla</button>
+          <button type="button" id="cancella-impegno">Cancella</button>
+        </div>
+        <section id="conferma-cancellazione" aria-label="Conferma cancellazione" hidden>
+          <p>Cancellare questo Impegno? L'operazione è definitiva.</p>
+          <button type="button" id="conferma-cancella">Sì, cancella</button>
+          <button type="button" id="mantieni-impegno">No, mantieni</button>
+        </section>
+      </form>
+    </dialog>
   </body>
 </html>

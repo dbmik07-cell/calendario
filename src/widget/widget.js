@@ -1,9 +1,11 @@
 import { aggiungiMinuti, giornoDi, leggiData, orarioDi } from "../nucleo/data-locale.js";
+import { preparaModificaImpegno } from "./modifica-impegno.js";
 
 /** @import { CosaDaFare, Impegno } from "../nucleo/tipi.js" */
 /** @typedef {Impegno & { passato: boolean, prossimo: boolean }} ImpegnoDelGiorno */
 
 const AGGIORNAMENTO_MS = 60_000;
+const modificaImpegno = preparaModificaImpegno(seleziona);
 
 // La cattura mantiene il rilascio del puntatore anche fuori dal bordo iniziale.
 for (const bordo of ["n", "s", "e", "w", "ne", "nw", "se", "sw"]) {
@@ -149,7 +151,13 @@ function mostraGiornata({ impegni, coseDaFare }) {
       const orario = document.createElement("span");
       orario.className = "orario";
       orario.textContent = descriviOrario(impegno);
-      voce.append(orario, impegno.titolo);
+      const modifica = document.createElement("button");
+      modifica.type = "button";
+      modifica.className = "apri-impegno";
+      modifica.setAttribute("aria-label", `Modifica ${impegno.titolo}`);
+      modifica.append(orario, impegno.titolo);
+      modifica.addEventListener("click", () => modificaImpegno(impegno));
+      voce.append(modifica);
       return voce;
     }),
   );
