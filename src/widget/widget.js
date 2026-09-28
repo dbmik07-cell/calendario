@@ -4,7 +4,34 @@ const oggi = await window.agenda.oggi();
 const [anno, mese, giornoDelMese] = oggi.split("-").map(Number);
 
 mostraMiniCalendario(anno, mese, giornoDelMese);
-mostraGiornata(oggi, (await window.agenda.giorno(oggi)).impegni);
+await aggiornaGiornata();
+
+elemento("nuova-frase").addEventListener("submit", async (evento) => {
+  evento.preventDefault();
+  const campo = /** @type {HTMLInputElement} */ (elemento("frase"));
+  const risultato = await window.agenda.aggiungiDaTesto(campo.value);
+  const esito = elemento("esito");
+  esito.hidden = false;
+  esito.classList.toggle("errore", !risultato.ok);
+  if (!risultato.ok) {
+    esito.textContent = risultato.errore;
+    return;
+  }
+  const { titolo, inizio } = risultato.impegno;
+  esito.textContent = `Aggiunto: ${titolo}, ${descriviData(inizio.slice(0, 10))} alle ${inizio.slice(11, 16)}`;
+  campo.value = "";
+  await aggiornaGiornata();
+});
+
+async function aggiornaGiornata() {
+  mostraGiornata(oggi, (await window.agenda.giorno(oggi)).impegni);
+}
+
+/** @param {string} data "YYYY-MM-DD" */
+function descriviData(data) {
+  const [a, m, g] = data.split("-").map(Number);
+  return new Date(a, m - 1, g).toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
+}
 
 /**
  * @param {number} anno
@@ -41,12 +68,7 @@ function mostraMiniCalendario(anno, mese, giornoEvidenziato) {
  * @param {Impegno[]} impegni
  */
 function mostraGiornata(data, impegni) {
-  const [a, m, g] = data.split("-").map(Number);
-  elemento("titolo-giorno").textContent = new Date(a, m - 1, g).toLocaleDateString("it-IT", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+  elemento("titolo-giorno").textContent = descriviData(data);
 
   elemento("impegni").replaceChildren(
     ...impegni.map((impegno) => {

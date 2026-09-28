@@ -1,4 +1,8 @@
-/** @import { Archivio, Orologio } from "./tipi.js" */
+import { formattaData, interpretaFrase } from "./frase.js";
+
+/** @import { Archivio, Impegno, Orologio } from "./tipi.js" */
+
+const ANTICIPO_PREDEFINITO_MINUTI = 15;
 
 /**
  * Nucleo dell'Agenda: tutta la logica, senza Electron né DOM.
@@ -11,20 +15,34 @@ export function creaAgenda({ orologio, archivio }) {
   return {
     /** @returns {string} La data locale di oggi, "YYYY-MM-DD". */
     oggi() {
-      return dataLocale(orologio());
+      return formattaData(orologio());
     },
 
     /** @param {string} data "YYYY-MM-DD" */
     giorno(data) {
       return {
-        impegni: dati.impegni.filter((i) => i.inizio.slice(0, 10) === data),
+        impegni: dati.impegni
+          .filter((i) => i.inizio.slice(0, 10) === data)
+          .sort((a, b) => a.inizio.localeCompare(b.inizio)),
       };
     },
-  };
-}
 
-/** @param {Date} d */
-function dataLocale(d) {
-  const due = (/** @type {number} */ n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${due(d.getMonth() + 1)}-${due(d.getDate())}`;
+    /** @param {string} frase */
+    aggiungiDaTesto(frase) {
+      const interpretata = interpretaFrase(frase, orologio());
+      if (!interpretata.ok) return interpretata;
+
+      /** @type {Impegno} */
+      const impegno = {
+        id: crypto.randomUUID(),
+        titolo: interpretata.titolo,
+        inizio: interpretata.inizio,
+        anticipoMinuti: ANTICIPO_PREDEFINITO_MINUTI,
+        promemoriaInviato: false,
+      };
+      dati.impegni.push(impegno);
+      archivio.salva(dati);
+      return /** @type {const} */ ({ ok: true, impegno });
+    },
+  };
 }

@@ -14,6 +14,7 @@ app.whenReady().then(() => {
 
   ipcMain.handle("agenda:oggi", () => agenda.oggi());
   ipcMain.handle("agenda:giorno", (_evento, /** @type {string} */ data) => agenda.giorno(data));
+  ipcMain.handle("agenda:aggiungiDaTesto", (_evento, /** @type {string} */ frase) => agenda.aggiungiDaTesto(frase));
 
   const widget = new BrowserWindow({
     width: 320,

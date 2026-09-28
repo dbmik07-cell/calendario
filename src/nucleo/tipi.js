@@ -28,6 +28,7 @@
 /**
  * @typedef {object} Archivio
  * @property {() => DatiAgenda} carica
+ * @property {(dati: DatiAgenda) => void} salva
  */
 
 /** @typedef {() => Date} Orologio */

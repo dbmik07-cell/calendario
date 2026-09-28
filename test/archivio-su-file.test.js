@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -30,5 +30,20 @@ describe("Archivio su file", () => {
     writeFileSync(percorso, JSON.stringify(dati), "utf8");
 
     expect(creaArchivioSuFile(percorso).carica()).toEqual(dati);
+  });
+
+  it("salva l'Agenda e la rilegge, creando la cartella se manca e senza lasciare file temporanei", () => {
+    const percorso = join(cartella, "dati", "agenda.json");
+    /** @type {import("../src/nucleo/tipi.js").DatiAgenda} */
+    const dati = {
+      versione: 1,
+      impegni: [{ id: "a", titolo: "Dentista", inizio: "2026-10-01T15:00", anticipoMinuti: 15, promemoriaInviato: false }],
+      coseDaFare: [],
+    };
+
+    creaArchivioSuFile(percorso).salva(dati);
+
+    expect(creaArchivioSuFile(percorso).carica()).toEqual(dati);
+    expect(readdirSync(join(cartella, "dati"))).toEqual(["agenda.json"]);
   });
 });

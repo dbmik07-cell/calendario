@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 
 /** @import { Archivio, DatiAgenda } from "./nucleo/tipi.js" */
 
@@ -13,6 +14,14 @@ export function creaArchivioSuFile(percorso) {
     carica() {
       if (!existsSync(percorso)) return { versione: 1, impegni: [], coseDaFare: [] };
       return /** @type {DatiAgenda} */ (JSON.parse(readFileSync(percorso, "utf8")));
+    },
+
+    salva(dati) {
+      // Scrittura atomica: un file a metà non sostituisce mai l'Agenda buona.
+      mkdirSync(dirname(percorso), { recursive: true });
+      const temporaneo = `${percorso}.tmp`;
+      writeFileSync(temporaneo, JSON.stringify(dati, null, 2), "utf8");
+      renameSync(temporaneo, percorso);
     },
   };
 }
