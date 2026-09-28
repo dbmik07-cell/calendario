@@ -2,7 +2,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 // Ogni metodo del Nucleo dell'Agenda diventa una chiamata IPC "agenda:<metodo>".
-const METODI_DEL_NUCLEO = ["oggi", "giorno", "giorniOccupati", "aggiungiDaTesto", "segnaFatta", "cancellaCosaDaFare", "modificaImpegno", "cancellaImpegno"];
+const METODI_DEL_NUCLEO = ["oggi", "giorno", "giorniOccupati", "aggiungiDaTesto", "segnaFatta", "cancellaCosaDaFare", "modificaImpegno", "cancellaImpegno", "avvisoArchivio"];
 
 contextBridge.exposeInMainWorld(
   "agenda",
@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld(
 
 // Messaggi dal processo principale al Widget.
 contextBridge.exposeInMainWorld("widget", {
+  /** @param {(avviso: string | null) => void} callback */
+  suAgendaAggiornata: (callback) => ipcRenderer.on("widget:agendaAggiornata", (_evento, avviso) => callback(avviso)),
   /** @param {string} bordo @param {{ x: number, y: number }} puntatore */
   ridimensiona: (bordo, puntatore) => ipcRenderer.send("widget:ridimensiona", bordo, puntatore),
   fineRidimensionamento: () => ipcRenderer.send("widget:fineRidimensionamento"),

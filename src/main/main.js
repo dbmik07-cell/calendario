@@ -15,19 +15,30 @@ const CONTROLLO_PROMEMORIA_MS = 30_000;
 app.setAppUserModelId(app.isPackaged ? "it.calendario.widget" : process.execPath);
 
 app.whenReady().then(() => {
+  const archivio = creaArchivioSuFile(join(app.getPath("userData"), "agenda.json"));
   const agenda = creaAgenda({
     orologio: () => new Date(),
-    archivio: creaArchivioSuFile(join(app.getPath("userData"), "agenda.json")),
+    archivio,
   });
+
+  const widget = creaWidget(qui);
+  const pubblicaAggiornamento = () => {
+    if (!widget.isDestroyed()) widget.webContents.send("widget:agendaAggiornata", agenda.avvisoArchivio());
+  };
 
   // Ogni metodo del Nucleo risponde a "agenda:<metodo>" (vedi preload.cjs).
   for (const [metodo, funzione] of Object.entries(agenda)) {
-    ipcMain.handle(`agenda:${metodo}`, (_evento, ...argomenti) =>
-      /** @type {(...a: unknown[]) => unknown} */ (funzione)(...argomenti),
-    );
+    ipcMain.handle(`agenda:${metodo}`, (_evento, ...argomenti) => {
+      const risultato = /** @type {(...a: unknown[]) => unknown} */ (funzione)(...argomenti);
+      if (!["oggi", "giorno", "giorniOccupati", "avvisoArchivio"].includes(metodo)) pubblicaAggiornamento();
+      return risultato;
+    });
   }
-
-  const widget = creaWidget(qui);
+  const terminaOsservazione = archivio.osserva(
+    () => { agenda.ricarica(); pubblicaAggiornamento(); },
+    () => agenda.avvisoArchivio() !== null,
+  );
+  app.on("before-quit", terminaOsservazione);
 
   /** @param {Impegno} impegno */
   function mostraPromemoria(impegno) {
@@ -41,7 +52,10 @@ app.whenReady().then(() => {
     notifica.show();
   }
 
-  const controllaPromemoria = () => agenda.promemoriaDovuti().forEach(mostraPromemoria);
+  const controllaPromemoria = () => {
+    agenda.promemoriaDovuti().forEach(mostraPromemoria);
+    pubblicaAggiornamento();
+  };
   controllaPromemoria();
   setInterval(controllaPromemoria, CONTROLLO_PROMEMORIA_MS);
 });

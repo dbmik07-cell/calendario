@@ -1,5 +1,7 @@
 import { aggiungiMinuti, formattaData, formattaInizio, giornoDi, leggiData } from "./data-locale.js";
 import { interpretaFrase } from "./frase.js";
+import { leggiAgenda } from "./leggi-agenda.js";
+import { datiVuoti } from "./dati.js";
 
 /** @import { Archivio, CosaDaFare, Impegno, Orologio } from "./tipi.js" */
 
@@ -13,7 +15,31 @@ const ANTICIPO_PREDEFINITO_MINUTI = 15;
  * @param {{ orologio: Orologio, archivio: Archivio }} dipendenze
  */
 export function creaAgenda({ orologio, archivio }) {
-  const dati = archivio.carica();
+  let dati = datiVuoti();
+  /** @type {string | null} */
+  let avviso = null;
+  /** @param {unknown} errore @returns {{ ok: false, errore: string }} */
+  function segnala(errore) {
+    avviso = `Agenda non aggiornata: ${errore instanceof Error ? errore.message : "errore di lettura o salvataggio"} Correggi il file per riprendere le modifiche.`;
+    return { ok: false, errore: avviso };
+  }
+  /** @param {import('./tipi.js').DatiAgenda} aggiornati @returns {Esito} */
+  function salva(aggiornati) {
+    try { archivio.salva(aggiornati); dati = aggiornati; return { ok: true }; }
+    catch (errore) { return segnala(errore); }
+  }
+  /** @returns {Esito} */
+  function ricarica() {
+    try {
+      const letti = archivio.carica();
+      const validi = leggiAgenda(letti, dati);
+      if (JSON.stringify(letti) !== JSON.stringify(validi)) archivio.salva(validi);
+      dati = validi;
+      avviso = null;
+      return { ok: true };
+    } catch (errore) { return segnala(errore); }
+  }
+  ricarica();
 
   /** @param {string} id */
   const trovaCosaDaFare = (id) => dati.coseDaFare.find((c) => c.id === id);
@@ -21,6 +47,10 @@ export function creaAgenda({ orologio, archivio }) {
   const cosaDaFareNonTrovata = { ok: false, errore: "Questa Cosa da fare non c'è più." };
 
   return {
+    /** Rilegge le modifiche esterne. @returns {Esito} */
+    ricarica,
+    /** Avviso visibile nel Widget; null quando l'archivio è utilizzabile. */
+    avvisoArchivio: () => avviso,
     /**
      * null rimuove la durata; i campi omessi mantengono il valore corrente.
      * @param {string} id
@@ -28,6 +58,7 @@ export function creaAgenda({ orologio, archivio }) {
      * @returns {Esito}
      */
     modificaImpegno(id, modifiche) {
+      if (avviso) return { ok: false, errore: avviso };
       const indice = dati.impegni.findIndex((i) => i.id === id);
       if (indice < 0) return { ok: false, errore: "Questo Impegno non c'è più." };
       const precedente = dati.impegni[indice];
@@ -54,18 +85,15 @@ export function creaAgenda({ orologio, archivio }) {
       }
       if (nuovo.inizio !== precedente.inizio || nuovo.anticipoMinuti !== precedente.anticipoMinuti) nuovo.promemoriaInviato = false;
       const aggiornati = { ...dati, impegni: dati.impegni.map((i, n) => n === indice ? nuovo : i) };
-      archivio.salva(aggiornati);
-      dati.impegni = aggiornati.impegni;
-      return { ok: true };
+      return salva(aggiornati);
     },
 
     /** @param {string} id @returns {Esito} */
     cancellaImpegno(id) {
+      if (avviso) return { ok: false, errore: avviso };
       if (!dati.impegni.some((i) => i.id === id)) return { ok: false, errore: "Questo Impegno non c'è più." };
       const aggiornati = { ...dati, impegni: dati.impegni.filter((i) => i.id !== id) };
-      archivio.salva(aggiornati);
-      dati.impegni = aggiornati.impegni;
-      return { ok: true };
+      return salva(aggiornati);
     },
 
     /** @returns {string} La data locale di oggi, "YYYY-MM-DD". */
@@ -106,14 +134,15 @@ export function creaAgenda({ orologio, archivio }) {
      * @returns {{ ok: true, impegno: Impegno } | { ok: true, cosaDaFare: CosaDaFare } | { ok: false, errore: string }}
      */
     aggiungiDaTesto(frase) {
+      if (avviso) return { ok: false, errore: avviso };
       const interpretata = interpretaFrase(frase, orologio());
       if (!interpretata.ok) return interpretata;
 
       if (interpretata.tipo === "cosaDaFare") {
         /** @type {CosaDaFare} */
         const cosaDaFare = { id: crypto.randomUUID(), titolo: interpretata.titolo, giorno: interpretata.giorno, fatta: false };
-        dati.coseDaFare.push(cosaDaFare);
-        archivio.salva(dati);
+        const esito = salva({ ...dati, coseDaFare: [...dati.coseDaFare, cosaDaFare] });
+        if (!esito.ok) return esito;
         return { ok: true, cosaDaFare };
       }
 
@@ -126,8 +155,8 @@ export function creaAgenda({ orologio, archivio }) {
         anticipoMinuti: interpretata.anticipoMinuti === undefined ? ANTICIPO_PREDEFINITO_MINUTI : interpretata.anticipoMinuti,
         promemoriaInviato: false,
       };
-      dati.impegni.push(impegno);
-      archivio.salva(dati);
+      const esito = salva({ ...dati, impegni: [...dati.impegni, impegno] });
+      if (!esito.ok) return esito;
       return { ok: true, impegno };
     },
 
@@ -138,6 +167,7 @@ export function creaAgenda({ orologio, archivio }) {
      * @returns {Impegno[]}
      */
     promemoriaDovuti() {
+      if (avviso) return [];
       const adesso = formattaInizio(orologio());
       const dovuti = dati.impegni
         .filter(
@@ -149,8 +179,9 @@ export function creaAgenda({ orologio, archivio }) {
         )
         .sort((a, b) => a.inizio.localeCompare(b.inizio));
       if (dovuti.length === 0) return [];
-      for (const impegno of dovuti) impegno.promemoriaInviato = true;
-      archivio.salva(dati);
+      const idDovuti = new Set(dovuti.map((i) => i.id));
+      const esito = salva({ ...dati, impegni: dati.impegni.map((i) => idDovuti.has(i.id) ? { ...i, promemoriaInviato: true } : i) });
+      if (!esito.ok) return [];
       return dovuti.map((i) => ({ ...i }));
     },
 
@@ -160,11 +191,10 @@ export function creaAgenda({ orologio, archivio }) {
      * @returns {Esito}
      */
     segnaFatta(id, fatta) {
+      if (avviso) return { ok: false, errore: avviso };
       const cosaDaFare = trovaCosaDaFare(id);
       if (!cosaDaFare) return cosaDaFareNonTrovata;
-      cosaDaFare.fatta = fatta;
-      archivio.salva(dati);
-      return { ok: true };
+      return salva({ ...dati, coseDaFare: dati.coseDaFare.map((c) => c.id === id ? { ...c, fatta } : c) });
     },
 
     /**
@@ -172,11 +202,10 @@ export function creaAgenda({ orologio, archivio }) {
      * @returns {Esito}
      */
     cancellaCosaDaFare(id) {
+      if (avviso) return { ok: false, errore: avviso };
       const cosaDaFare = trovaCosaDaFare(id);
       if (!cosaDaFare) return cosaDaFareNonTrovata;
-      dati.coseDaFare.splice(dati.coseDaFare.indexOf(cosaDaFare), 1);
-      archivio.salva(dati);
-      return { ok: true };
+      return salva({ ...dati, coseDaFare: dati.coseDaFare.filter((c) => c.id !== id) });
     },
   };
 }

@@ -32,6 +32,7 @@ const stato = {
 };
 stato.giornoSelezionato = stato.oggi;
 stato.meseMostrato = meseDi(stato.oggi);
+window.widget.suAgendaAggiornata((avviso) => { mostraAvvisoArchivio(avviso); void aggiorna(); });
 await aggiorna();
 
 elemento("mese-precedente").addEventListener("click", () => cambiaMese(-1));
@@ -89,12 +90,21 @@ async function cambiaMese(scarto) {
 }
 
 async function aggiorna() {
-  const [occupati, giornata] = await Promise.all([
+  const [occupati, giornata, avviso] = await Promise.all([
     window.agenda.giorniOccupati(stato.meseMostrato),
     window.agenda.giorno(stato.giornoSelezionato),
+    window.agenda.avvisoArchivio(),
   ]);
+  mostraAvvisoArchivio(avviso);
   mostraMiniCalendario(new Set(occupati));
   mostraGiornata(giornata);
+}
+
+/** @param {string | null} avviso */
+function mostraAvvisoArchivio(avviso) {
+  const messaggio = elemento("avviso-archivio");
+  messaggio.hidden = avviso === null;
+  messaggio.textContent = avviso;
 }
 
 /** @param {Set<string>} occupati giorni "YYYY-MM-DD" con qualcosa in programma */

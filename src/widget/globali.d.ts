@@ -13,6 +13,7 @@ declare global {
   interface Window {
     agenda: NucleoRemoto;
     widget: {
+      suAgendaAggiornata(callback: (avviso: string | null) => void): void;
       ridimensiona(bordo: string, puntatore: { x: number; y: number }): void;
       fineRidimensionamento(): void;
       suMostraGiorno(callback: (giorno: string) => void): void;
