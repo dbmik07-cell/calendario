@@ -12,5 +12,8 @@ type NucleoRemoto = {
 declare global {
   interface Window {
     agenda: NucleoRemoto;
+    widget: {
+      suMostraGiorno(callback: (giorno: string) => void): void;
+    };
   }
 }

@@ -388,3 +388,66 @@ describe("Promemoria", () => {
     });
   });
 });
+
+describe("giorniOccupati", () => {
+  it("elenca, in ordine e senza doppioni, i giorni del mese con Impegni o Cose da fare", () => {
+    const archivio = creaArchivioInMemoria({
+      versione: 1,
+      impegni: [
+        { id: "a", titolo: "Fine settembre", inizio: "2026-09-30T23:00", anticipoMinuti: 15, promemoriaInviato: false },
+        { id: "b", titolo: "Ultimo di ottobre", inizio: "2026-10-31T18:00", anticipoMinuti: 15, promemoriaInviato: false },
+        { id: "c", titolo: "Primo di ottobre", inizio: "2026-10-01T09:00", anticipoMinuti: 15, promemoriaInviato: false },
+        { id: "d", titolo: "Ancora il primo", inizio: "2026-10-01T18:00", anticipoMinuti: 15, promemoriaInviato: false },
+        { id: "e", titolo: "Novembre", inizio: "2026-11-01T00:00", anticipoMinuti: 15, promemoriaInviato: false },
+      ],
+      coseDaFare: [
+        { id: "f", titolo: "Banca", giorno: "2026-10-15", fatta: false },
+        { id: "g", titolo: "Banca", giorno: "2026-10-01", fatta: true },
+      ],
+    });
+    const agenda = creaAgenda({ orologio: orologioFermoA("2026-10-01T09:00"), archivio });
+
+    expect(agenda.giorniOccupati("2026-10")).toEqual(["2026-10-01", "2026-10-15", "2026-10-31"]);
+  });
+});
+
+describe("Impegni passati e prossimo", () => {
+  const archivio = () =>
+    creaArchivioInMemoria({
+      versione: 1,
+      impegni: [
+        { id: "a", titolo: "Colazione", inizio: "2026-10-01T08:00", anticipoMinuti: 15, promemoriaInviato: false },
+        { id: "b", titolo: "Riunione", inizio: "2026-10-01T11:30", durataMinuti: 60, anticipoMinuti: 15, promemoriaInviato: false },
+        { id: "c", titolo: "Dentista", inizio: "2026-10-01T15:00", anticipoMinuti: 15, promemoriaInviato: false },
+        { id: "d", titolo: "Ieri", inizio: "2026-09-30T15:00", anticipoMinuti: 15, promemoriaInviato: false },
+        { id: "e", titolo: "Domani", inizio: "2026-10-02T15:00", anticipoMinuti: 15, promemoriaInviato: false },
+      ],
+      coseDaFare: [],
+    });
+  /** @param {string} adesso @param {string} data */
+  const stati = (adesso, data) =>
+    creaAgenda({ orologio: orologioFermoA(adesso), archivio: archivio() })
+      .giorno(data)
+      .impegni.map(({ titolo, passato, prossimo }) => ({ titolo, passato, prossimo }));
+
+  it("oggi: finiti quelli già conclusi, prossimo il primo non ancora finito (anche se in corso)", () => {
+    expect(stati("2026-10-01T12:00", "2026-10-01")).toEqual([
+      { titolo: "Colazione", passato: true, prossimo: false },
+      { titolo: "Riunione", passato: false, prossimo: true },
+      { titolo: "Dentista", passato: false, prossimo: false },
+    ]);
+  });
+
+  it("oggi, dopo l'ultimo Impegno: tutti passati, nessun prossimo", () => {
+    expect(stati("2026-10-01T15:01", "2026-10-01").map((i) => [i.passato, i.prossimo])).toEqual([
+      [true, false],
+      [true, false],
+      [true, false],
+    ]);
+  });
+
+  it("un giorno passato è tutto passato, un giorno futuro non ha né passati né prossimo", () => {
+    expect(stati("2026-10-01T12:00", "2026-09-30")).toEqual([{ titolo: "Ieri", passato: true, prossimo: false }]);
+    expect(stati("2026-10-01T12:00", "2026-10-02")).toEqual([{ titolo: "Domani", passato: false, prossimo: false }]);
+  });
+});

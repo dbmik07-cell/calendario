@@ -9,7 +9,14 @@
   </head>
   <body>
     <main class="widget">
-      <header class="maniglia" id="titolo-mese"></header>
+      <header class="maniglia">
+        <h1 id="titolo-mese"></h1>
+        <nav class="navigazione">
+          <button type="button" id="mese-precedente" aria-label="Mese precedente">‹</button>
+          <button type="button" id="torna-a-oggi">Oggi</button>
+          <button type="button" id="mese-successivo" aria-label="Mese successivo">›</button>
+        </nav>
+      </header>
       <table class="mini-calendario">
         <thead>
           <tr><th>L</th><th>M</th><th>M</th><th>G</th><th>V</th><th>S</th><th>D</th></tr>
@@ -17,7 +24,7 @@
         <tbody id="giorni-mese"></tbody>
       </table>
       <form id="nuova-frase" class="nuova-frase" autocomplete="off">
-        <input id="frase" type="text" spellcheck="false"placeholder="Es. domani alle 15 dentista" aria-label="Aggiungi con una frase" />
+        <input id="frase" type="text" spellcheck="false" placeholder="Es. domani alle 15 dentista" aria-label="Aggiungi con una frase" />
       </form>
       <p id="esito" class="esito" role="status" hidden></p>
       <section class="giornata">

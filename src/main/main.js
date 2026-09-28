@@ -3,7 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { creaArchivioSuFile } from "../archivio-su-file.js";
 import { creaAgenda } from "../nucleo/agenda.js";
-import { aggiungiMinuti, orarioDi } from "../nucleo/data-locale.js";
+import { aggiungiMinuti, giornoDi, orarioDi } from "../nucleo/data-locale.js";
 
 /** @import { Impegno } from "../nucleo/tipi.js" */
 
@@ -46,6 +46,7 @@ app.whenReady().then(() => {
     notifica.on("click", () => {
       widget.show();
       widget.focus();
+      widget.webContents.send("widget:mostraGiorno", giornoDi(impegno.inizio));
     });
     notifica.show();
   }

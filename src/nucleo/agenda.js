@@ -27,17 +27,31 @@ export function creaAgenda({ orologio, archivio }) {
     },
 
     /**
-     * Impegni (in ordine di orario) e Cose da fare di un giorno.
+     * Impegni (in ordine di orario) e Cose da fare di un giorno. Ogni Impegno dice se è
+     * già finito (passato) e, solo oggi, se è il primo non ancora finito (prossimo).
      *
      * @param {string} data "YYYY-MM-DD"
      */
     giorno(data) {
-      return {
-        impegni: dati.impegni
-          .filter((i) => giornoDi(i.inizio) === data)
-          .sort((a, b) => a.inizio.localeCompare(b.inizio)),
-        coseDaFare: dati.coseDaFare.filter((c) => c.giorno === data),
-      };
+      const adesso = formattaInizio(orologio());
+      const impegni = dati.impegni
+        .filter((i) => giornoDi(i.inizio) === data)
+        .sort((a, b) => a.inizio.localeCompare(b.inizio))
+        .map((i) => ({ ...i, passato: aggiungiMinuti(i.inizio, i.durataMinuti ?? 0) < adesso, prossimo: false }));
+      const prossimo = data === giornoDi(adesso) ? impegni.find((i) => !i.passato) : undefined;
+      if (prossimo) prossimo.prossimo = true;
+      return { impegni, coseDaFare: dati.coseDaFare.filter((c) => c.giorno === data) };
+    },
+
+    /**
+     * I giorni del mese che contengono almeno un Impegno o una Cosa da fare.
+     *
+     * @param {string} mese "YYYY-MM"
+     * @returns {string[]} "YYYY-MM-DD", in ordine
+     */
+    giorniOccupati(mese) {
+      const giorni = new Set([...dati.impegni.map((i) => giornoDi(i.inizio)), ...dati.coseDaFare.map((c) => c.giorno)]);
+      return [...giorni].filter((g) => g.startsWith(`${mese}-`)).sort();
     },
 
     /**

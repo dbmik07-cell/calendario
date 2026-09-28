@@ -6,11 +6,11 @@
 
 **Status:** ready-for-agent
 
-- [ ] Il Nucleo espone `giorniOccupati(mese)`
-- [ ] Clic su un giorno → la lista mostra quel giorno, con il giorno selezionato evidenziato
-- [ ] Frecce mese precedente/successivo e pulsante "Oggi"
-- [ ] Puntino sui giorni occupati, aggiornato dopo ogni modifica
-- [ ] Dopo `aggiungiDaTesto` il Widget seleziona il giorno dell'elemento creato
-- [ ] Oggi: Impegni già finiti attenuati, prossimo Impegno evidenziato (aggiornato col passare del tempo)
-- [ ] Se il ticket 05 è già fatto: cliccando la notifica il Widget si apre sul giorno dell'Impegno
-- [ ] Test Vitest via Nucleo: `giorniOccupati` per un mese con Impegni e Cose da fare, compresi i bordi del mese
+- [x] Il Nucleo espone `giorniOccupati(mese)`
+- [x] Clic su un giorno → la lista mostra quel giorno, con il giorno selezionato evidenziato
+- [x] Frecce mese precedente/successivo e pulsante "Oggi"
+- [x] Puntino sui giorni occupati, aggiornato dopo ogni modifica
+- [x] Dopo `aggiungiDaTesto` il Widget seleziona il giorno dell'elemento creato
+- [x] Oggi: Impegni già finiti attenuati, prossimo Impegno evidenziato (aggiornato col passare del tempo)
+- [ ] Se il ticket 05 è già fatto: cliccando la notifica il Widget si apre sul giorno dell'Impegno (codice fatto, non verificato: vedi ticket 05)
+- [x] Test Vitest via Nucleo: `giorniOccupati` per un mese con Impegni e Cose da fare, compresi i bordi del mese

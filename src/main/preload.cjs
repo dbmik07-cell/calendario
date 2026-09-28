@@ -1,7 +1,8 @@
-// Unico ponte tra il Widget e il Nucleo dell'Agenda: ogni metodo diventa una chiamata IPC.
+// Unico ponte tra il Widget e il processo principale.
 const { contextBridge, ipcRenderer } = require("electron");
 
-const METODI_DEL_NUCLEO = ["oggi", "giorno", "aggiungiDaTesto", "segnaFatta", "cancellaCosaDaFare"];
+// Ogni metodo del Nucleo dell'Agenda diventa una chiamata IPC "agenda:<metodo>".
+const METODI_DEL_NUCLEO = ["oggi", "giorno", "giorniOccupati", "aggiungiDaTesto", "segnaFatta", "cancellaCosaDaFare"];
 
 contextBridge.exposeInMainWorld(
   "agenda",
@@ -12,3 +13,9 @@ contextBridge.exposeInMainWorld(
     ]),
   ),
 );
+
+// Messaggi dal processo principale al Widget.
+contextBridge.exposeInMainWorld("widget", {
+  /** @param {(giorno: string) => void} callback chiamata quando il Widget deve mostrare un giorno */
+  suMostraGiorno: (callback) => ipcRenderer.on("widget:mostraGiorno", (_evento, giorno) => callback(giorno)),
+});
