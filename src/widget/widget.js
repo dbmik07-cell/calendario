@@ -5,6 +5,22 @@ import { aggiungiMinuti, giornoDi, leggiData, orarioDi } from "../nucleo/data-lo
 
 const AGGIORNAMENTO_MS = 60_000;
 
+// La cattura mantiene il rilascio del puntatore anche fuori dal bordo iniziale.
+for (const bordo of ["n", "s", "e", "w", "ne", "nw", "se", "sw"]) {
+  const maniglia = document.createElement("div");
+  maniglia.className = `ridimensiona ${bordo}`;
+  maniglia.addEventListener("pointerdown", (evento) => {
+    if (evento.button !== 0) return;
+    evento.preventDefault();
+    maniglia.setPointerCapture(evento.pointerId);
+    window.widget.ridimensiona(bordo, { x: evento.screenX, y: evento.screenY });
+  });
+  for (const evento of ["pointerup", "pointercancel", "lostpointercapture"]) {
+    maniglia.addEventListener(evento, () => window.widget.fineRidimensionamento());
+  }
+  document.body.append(maniglia);
+}
+
 const stato = {
   oggi: await window.agenda.oggi(),
   /** Il giorno di cui il Widget mostra la lista, "YYYY-MM-DD". */

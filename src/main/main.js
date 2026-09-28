@@ -1,4 +1,5 @@
-import { app, BrowserWindow, ipcMain, Notification } from "electron";
+import { app, ipcMain, Notification } from "electron";
+import { creaWidget } from "./widget.js";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { creaArchivioSuFile } from "../archivio-su-file.js";
@@ -26,18 +27,7 @@ app.whenReady().then(() => {
     );
   }
 
-  const widget = new BrowserWindow({
-    width: 320,
-    height: 460,
-    frame: false,
-    transparent: true,
-    webPreferences: {
-      preload: join(qui, "preload.cjs"),
-      contextIsolation: true,
-      sandbox: true,
-    },
-  });
-  widget.loadFile(join(qui, "..", "widget", "index.html"));
+  const widget = creaWidget(qui);
 
   /** @param {Impegno} impegno */
   function mostraPromemoria(impegno) {

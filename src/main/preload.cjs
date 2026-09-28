@@ -16,6 +16,9 @@ contextBridge.exposeInMainWorld(
 
 // Messaggi dal processo principale al Widget.
 contextBridge.exposeInMainWorld("widget", {
+  /** @param {string} bordo @param {{ x: number, y: number }} puntatore */
+  ridimensiona: (bordo, puntatore) => ipcRenderer.send("widget:ridimensiona", bordo, puntatore),
+  fineRidimensionamento: () => ipcRenderer.send("widget:fineRidimensionamento"),
   /** @param {(giorno: string) => void} callback chiamata quando il Widget deve mostrare un giorno */
   suMostraGiorno: (callback) => ipcRenderer.on("widget:mostraGiorno", (_evento, giorno) => callback(giorno)),
 });

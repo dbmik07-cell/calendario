@@ -17,7 +17,8 @@ body {
   border-radius: 18px;
   background: rgba(246, 246, 248, 0.88);
   border: 1px solid rgba(0, 0, 0, 0.08);
-  overflow: hidden;
+  overflow: auto;
+  scrollbar-width: thin;
 }
 
 /* Area da cui si trascina il Widget (la finestra non ha bordi). */
@@ -28,6 +29,8 @@ body {
   justify-content: space-between;
   padding-bottom: 8px;
   cursor: grab;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .maniglia h1 {
@@ -237,3 +240,14 @@ body {
 .cosa-da-fare:hover .cancella {
   visibility: visible;
 }
+
+.ridimensiona { position: fixed; z-index: 10; -webkit-app-region: no-drag; }
+.ridimensiona.n, .ridimensiona.s { left: 12px; right: 12px; height: 6px; cursor: ns-resize; }
+.ridimensiona.e, .ridimensiona.w { top: 12px; bottom: 12px; width: 6px; cursor: ew-resize; }
+.ridimensiona.n, .ridimensiona.ne, .ridimensiona.nw { top: 0; }
+.ridimensiona.s, .ridimensiona.se, .ridimensiona.sw { bottom: 0; }
+.ridimensiona.e, .ridimensiona.ne, .ridimensiona.se { right: 0; }
+.ridimensiona.w, .ridimensiona.nw, .ridimensiona.sw { left: 0; }
+.ridimensiona.ne, .ridimensiona.nw, .ridimensiona.se, .ridimensiona.sw { width: 12px; height: 12px; }
+.ridimensiona.ne, .ridimensiona.sw { cursor: nesw-resize; }
+.ridimensiona.nw, .ridimensiona.se { cursor: nwse-resize; }
